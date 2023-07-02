@@ -1,15 +1,17 @@
 {
   pkgs ? import <nixpkgs> {},
+  cacheBreaker ? "1",
+
   usePathSource ? true,
   useStringifiedPath ? true,
   useFilteredPath ? true,
   useLinkFarm ? true,
-  useReproDerivation ? true,
-  cacheBreaker ? "1",
+  # useReproDerivation ? true,
   ...
 }:
 let
   lib = pkgs.lib;
+  useReproDerivation = true;
 
   subdirSource = if usePathSource then (import (builtins.path { name = "subdir-source-nonrepro"; path = ./subdir.d; })) else (import ./subdir.d);
   subdir = subdirSource {
