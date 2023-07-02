@@ -83,12 +83,15 @@
                   echo "Copying test materials to $TEST_DIR"
                   bash -c "cp -R $SOURCE_DIR/* \"$TEST_DIR\""
                   chmod -R 770 "$TEST_DIR"
+
                   ls -al "$TEST_DIR"
+                  cd "$TEST_DIR"
+
                   echo "Beginning tests..."
                   ${runGeneratorFor nix-stable "Stable" "$TEST_DIR"}
                   ${runGeneratorFor nix-lst "LST" "$TEST_DIR"}
 
-                  You may wish to delete the content of "$TEMP_DIR", if you do not want to rerun any of the above scenarios for logs.
+                  echo "You may wish to delete the content of "$TEST_DIR", if you do not want to rerun any of the above scenarios for logs."
                 '';
             in {
               inherit generator; # Report generator
