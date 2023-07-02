@@ -9,6 +9,7 @@
         let pkgs = nixpkgs.legacyPackages.${system}; in
         {
           devShells.default = import ./shell.nix { inherit pkgs; };
+          devShells.noRepro = import ./shell.nix { inherit pkgs; shouldRepro = false; };
         }
       );
 }

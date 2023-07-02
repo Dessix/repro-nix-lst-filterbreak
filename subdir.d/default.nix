@@ -4,14 +4,12 @@ stdenv.mkDerivation {
   inherit version;
   src = ./.;
 
-  phases = [ "build" "install" ];
+  phases = [ "buildPhase" "installPhase" ];
 
   buildInputs = [ coreutils ];
   buildPhase = ''
     cp -r $src/* .
   '';
-
-  dontUnpack = true;
 
   installPhase = ''
     mkdir -p $out
