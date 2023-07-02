@@ -5,6 +5,7 @@
   usePathSource ? true,
   useStringifiedPath ? true,
   useFilteredPath ? true,
+  useCleanSource ? true,
   useLinkFarm ? true,
 
   ...
@@ -34,6 +35,9 @@ let
       name = "subdir-filtered";
       filter = path: type: true;
     }))
+
+    # Does lib.sources.cleanSourcefiltration change behaviour?
+    ++ (lib.optional useCleanSource lib.sources.cleanSource)
 
     # Does builtin.path pkgs.linkFarm change behaviour?
     ++ (lib.optional useLinkFarm (prev: pkgs.linkFarm "linkfarm-combined-dir" [
