@@ -1,41 +1,53 @@
 {
   pkgs ? import <nixpkgs> {},
-  shouldRepro ? false,
+  usePathSource ? true,
+  useStringifiedPath ? true,
+  useFilteredPath ? true,
+  useLinkFarm ? true,
+  useReproDerivation ? true,
+  cacheBreaker ? "1",
   ...
 }:
 let
-  subdirSource = if shouldRepro then (import ./subdir.d) else (import (builtins.path { name = "subdir-source-nonrepro"; path = ./subdir.d; }));
+  lib = pkgs.lib;
+
+  subdirSource = if usePathSource then (import (builtins.path { name = "subdir-source-nonrepro"; path = ./subdir.d; })) else (import ./subdir.d);
   subdir = subdirSource {
     inherit (pkgs) stdenv coreutils;
-    version = "testing2";
+    version = cacheBreaker;
   };
-  filteredPath = builtins.path {
-    path = "${subdir.outPath}";
-    name = "subdir-filtered";
-    filter = path: type:
-      true;
-      #builtins.elem (baseNameOf path) [ "hello.txt" "world.txt" ];
-  };
-  linkFarmed = pkgs.linkFarm "linkfarm-combined-dir" [
-    {
-      name = "hello.txt";
-      path = "${filteredPath}/hello.txt";
-    }
-    {
-      name = "world.txt";
-      path = "${filteredPath}/world.txt";
-    }
-    {
-      name = "space.txt";
-      path = "${pkgs.emptyFile}";
-    }
-  ];
-  self = pkgs.stdenv.mkDerivation {
-    name = "hello-world-lst-repro";
-    version = "0.0.2";
-    installPhase = ''
-      cat "$linkFarmed/hello.txt" "$linkFarmed/world.txt" > "$out/helloworld.txt"
-    '';
-    buildInputs = [linkFarmed];
-  };
-in self
+  output = lib.trivial.pipe subdir (
+    (lib.optional useStringifiedPath (prev: if useStringifiedPath then "${prev}" else prev))
+    ++ (lib.optional useFilteredPath (prev: builtins.path {
+      path = prev;
+      name = "subdir-filtered";
+      filter = path: type: true;
+    }))
+    ++ (lib.optional useLinkFarm (prev: pkgs.linkFarm "linkfarm-combined-dir" [
+        {
+          name = "hello.txt";
+          path = "${prev}/hello.txt";
+        }
+        {
+          name = "world.txt";
+          path = "${prev}/world.txt";
+        }
+        {
+          name = "space.txt";
+          path = "${pkgs.emptyFile}";
+        }
+      ]
+    ))
+    ++ (lib.optional useReproDerivation (prev:
+      pkgs.runCommand "hello-world-lst-repro-${cacheBreaker}" {
+        version = cacheBreaker;
+      }
+      ''
+        set -e
+        ls "${prev}"
+        mkdir -p $out
+        cat "${prev}/hello.txt" "${prev}/world.txt" > "$out/helloworld.txt"
+      '')
+    )
+  );
+in output
