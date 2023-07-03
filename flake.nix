@@ -132,9 +132,11 @@
                   if [ ! -z ''${REPORTOUT+x} ]; then
                     echo -e "\n]" >> "$REPORTOUT"
                     # Pretty-format the file to the format guessed by extension
-                    "${"${pkgs.yq-go}/bin/yq"}" -i --indent 2 -M -P '.' --input-format json --output-format auto "$REPORTOUT"
+                    REPORTEXT="''${REPORTOUT${"##"}*.}"
+                    REPORTFORMAT="''${REPORTEXT:-auto}"
+                    echo "Interpreting path format as \"$REPORTFORMAT\""
+                    "${"${pkgs.yq-go}/bin/yq"}" --indent 2 -M -P '.' --input-format=json --output-format="$REPORTFORMAT" -i "$REPORTOUT"
                   fi
-
 
                   echo "You may wish to delete the content of "$TEST_DIR", if you do not want to rerun any of the above scenarios for logs."
                 '';
